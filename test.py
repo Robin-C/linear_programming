@@ -20,11 +20,10 @@ coverage_map = dict()
 for (p, s) in [(p, s) for p in patterns for s in shifts]:
     coverage_map[p, s] = 1 if s in coverages[p] else 0
 
-# define the model: we want to minimize the cost
+# define the model: we want to minimize the hours
 prob = pl.LpProblem("scheduling", pl.LpMinimize)
 
 agents = ['robin', 'mathew', 'george', 'elisa']
-
 
 vars_by_shift = {1: [],
                  2: [],
@@ -40,7 +39,7 @@ vars_by_agent = {'robin': [],
                  }
 schedule = []
 
-
+# helper function
 def shift_to_be_sent_to(pattern):
     shifts = []
     for shift in range(1, 6):
@@ -49,7 +48,7 @@ def shift_to_be_sent_to(pattern):
     return shifts
 
 
-# for combination, coverage in coverage_map.items():
+# store decision variables
 for pattern in patterns:
     for agent in agents:
         shifts = shift_to_be_sent_to(pattern)
