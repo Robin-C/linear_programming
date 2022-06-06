@@ -8,18 +8,10 @@ agents = pd.read_csv('./agents.csv')
 agent_availabilities = cl.defaultdict(dict)
 agent_names = pd.unique(agents['user_id'])
 
-for agent in agent_names:
-    agent_availabilities[agent] = []
-
-for index, row in agents.iterrows():
-    agent_availabilities[row['user_id']].append(
-        [row['first_shift'], row['second_shift']])
-
-# possible shift combination
+# load possible shift combination
 shift_combinations = cl.defaultdict(dict)
 possible_combination = pd.read_csv('./possible_combination.csv')
 shifts = pd.unique(possible_combination['shift'])
-
 
 for agent in agent_names:
     shift_combinations[agent] = {}
@@ -29,20 +21,22 @@ for agent in agent_names:
         shift_combinations[agent][row['shift']][row['pattern_1']] = 0
         shift_combinations[agent][row['shift']][row['pattern_2']] = 0
 
+## Model
 # define the model: we want to minimize the cost
 prob = pl.LpProblem("scheduling", pl.LpMinimize)
 
-schedule = []
 
-# Initialize dict
+# Initialize dict where variables will be stored
 vars_by_shift = cl.defaultdict(dict)
-vars_by_pattern = cl.defaultdict(dict)
+vars_by_agent = cl.defaultdict(dict)
 
 for shift in shifts:
     vars_by_shift[shift] = []
 
 for agent in agent_names:
-    vars_by_pattern[agent] = []
+    vars_by_agent[agent] = []
+
+schedule = []
 
 # create variables
 for agent in agent_names:
@@ -51,7 +45,7 @@ for agent in agent_names:
             var = pl.LpVariable(
                 f"{pattern},{shift},{agent}", 0, 1, pl.LpInteger)
             vars_by_shift[shift].append(var)
-            vars_by_pattern[agent].append(var)
+            vars_by_agent[agent].append(var)
             schedule.append(var)
 
 # objective
@@ -64,9 +58,9 @@ for shift, patterns in vars_by_shift.items():
     elif shift == 4 or shift == 5:  # and 2 persons at shift 4 and 5
         prob += sum(vars_by_shift[shift]) >= 2
 
-# constraint 2: agent can at most be scheduled 1 time
+# constraint 2: agent can at most be scheduled 1 time among all patterns
 for agent in agent_names:
-    prob += sum(vars_by_pattern[agent]) <= 1
+    prob += sum(vars_by_agent[agent]) <= 1
 
 
 status = prob.solve()
