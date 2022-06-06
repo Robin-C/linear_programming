@@ -56,8 +56,9 @@ for pattern in patterns:
         var = pl.LpVariable(
             f"{agent},{pattern}", 0, 1, pl.LpInteger)
         for shift in shifts:
-            # we want to send the variable to vars_by_shift in all corresponding vars_by_shift[shift] and send it to vars_by_shift only once
+            # we want to send the variable to vars_by_shift in all corresponding vars_by_shift[shift]
             vars_by_shift[shift].append(var)
+        # and send it to schedule and vars_by_agent only once    
         schedule.append(var)
         vars_by_agent[agent].append(var)
 
